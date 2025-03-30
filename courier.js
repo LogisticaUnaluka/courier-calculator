@@ -22,10 +22,10 @@ const CourierCalculator = () => {
     const total = precioPorKg + gastosOperativos + delivery;
     
     return {
-      precioPorKg: precioPorKg,
-      gastosOperativos: gastosOperativos,
-      delivery: delivery,
-      total: total
+      precioPorKg,
+      gastosOperativos,
+      delivery,
+      total
     };
   };
 
@@ -36,10 +36,10 @@ const CourierCalculator = () => {
     const total = precioPorKg + gastosOperativos + delivery;
     
     return {
-      precioPorKg: precioPorKg,
-      gastosOperativos: gastosOperativos,
-      delivery: delivery,
-      total: total
+      precioPorKg,
+      gastosOperativos,
+      delivery,
+      total
     };
   };
 
@@ -50,10 +50,10 @@ const CourierCalculator = () => {
     const total = precioPorKg + gastosOperativos + delivery;
     
     return {
-      precioPorKg: precioPorKg,
-      gastosOperativos: gastosOperativos,
-      delivery: delivery,
-      total: total
+      precioPorKg,
+      gastosOperativos,
+      delivery,
+      total
     };
   };
 
@@ -100,11 +100,41 @@ const CourierCalculator = () => {
       {/* Header con logos */}
       <div className="flex justify-between items-center mb-4">
         <div className="w-1/3">
-          <img src="Logos-Aztra-Unaluka/logo-unaluka.png" alt="Unaluka" className="h-12" />
+          <div className="flex items-center">
+            <img 
+              src="https://github.com/user-attachments/assets/d747658e-ecbf-4636-8790-8ca515ed6658" 
+              alt="Unaluka-com" 
+              className="h-12 mr-2"
+              onError={(e) => {
+                e.target.onerror = null;
+                e.target.style.display = 'none';
+                e.target.parentNode.innerHTML = '<span className="text-red-600 font-bold text-xl">UNALUKA.com</span>';
+              }} 
+            />
+            <img 
+              src="https://github.com/user-attachments/assets/47baaf3b-d1b7-4b37-bc2e-1b17f4ae8b49" 
+              alt="Unaluka-global" 
+              className="h-12"
+              onError={(e) => {
+                e.target.onerror = null;
+                e.target.style.display = 'none';
+                e.target.parentNode.innerHTML += '<span className="text-red-600 font-bold ml-2">GLOBAL</span>';
+              }} 
+            />
+          </div>
         </div>
         <h1 className="text-xl font-bold text-gray-900 text-center w-1/3">Cotizador de Courier</h1>
         <div className="w-1/3 flex justify-end">
-          <img src="Logos-Aztra-Unaluka/logo-aztra.png" alt="Aztra" className="h-12" />
+          <img 
+            src="https://github.com/user-attachments/assets/2c3b386c-4af8-41a0-8b20-562bd4bdb291" 
+            alt="Aztra" 
+            className="h-12"
+            onError={(e) => {
+              e.target.onerror = null;
+              e.target.style.display = 'none';
+              e.target.parentNode.innerHTML = '<div className="bg-blue-800 p-2 rounded text-white font-bold">AZTRA</div>';
+            }} 
+          />
         </div>
       </div>
       
@@ -207,5 +237,8 @@ const CourierCalculator = () => {
   );
 };
 
-// Renderiza el componente en el DOM
-ReactDOM.render(<CourierCalculator />, document.getElementById('root'));
+// Para usar en un proyecto React
+export default CourierCalculator;
+
+// Para usar directamente en HTML con React cargado mediante CDN
+// ReactDOM.render(<CourierCalculator />, document.getElementById('root'));
