@@ -97,9 +97,15 @@ const CourierCalculator = () => {
 
   return (
     <div className="max-w-2xl mx-auto p-4 bg-white rounded-lg shadow">
-      {/* Header simplificado sin logos */}
-      <div className="mb-4">
-        <h1 className="text-xl font-bold text-gray-900 text-center">Cotizador de Courier</h1>
+      {/* Header con logos */}
+      <div className="flex justify-between items-center mb-4">
+        <div className="w-1/3">
+          <img src="Logos-Aztra-Unaluka/logo-unaluka.png" alt="Unaluka" className="h-12" />
+        </div>
+        <h1 className="text-xl font-bold text-gray-900 text-center w-1/3">Cotizador de Courier</h1>
+        <div className="w-1/3 flex justify-end">
+          <img src="Logos-Aztra-Unaluka/logo-aztra.png" alt="Aztra" className="h-12" />
+        </div>
       </div>
       
       <div className="space-y-4">
