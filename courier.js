@@ -71,39 +71,19 @@ const CourierCalculator = () => {
 
   const calculateAlexim = () => {
     const effectiveWeight = getEffectiveWeight();
-    let precioPorKg = 0;
-    let gastosOperativos = 0;
-    let delivery = 0;
+    let precioPorKg = effectiveWeight * 5.00;
+    let gastosOperativos, delivery;
     
-    // Tarifa de flete basada en peso actual
-    if (effectiveWeight <= 20) {
-      precioPorKg = effectiveWeight * 5.00;
-      if (effectiveWeight === 4.2) {
-        precioPorKg = 21.00; // Valor exacto para el caso específico
-      } else if (effectiveWeight >= 21 && effectiveWeight <= 40) {
-        precioPorKg = 150.00; // Tarifa fija según la imagen 1
-      }
-    } else if (effectiveWeight >= 21 && effectiveWeight <= 40) {
-      precioPorKg = 150.00;
-    } else if (effectiveWeight >= 41 && effectiveWeight <= 70) {
-      precioPorKg = 150.00;
-    } else if (effectiveWeight >= 71 && effectiveWeight <= 100) {
-      precioPorKg = 150.00;
-    }
-    
-    // Gastos operativos y delivery según la tabla de la imagen 3
-    if (effectiveWeight <= 20) {
-      gastosOperativos = 35.00;
-      delivery = 10.00;
-    } else if (effectiveWeight >= 21 && effectiveWeight <= 40) {
-      gastosOperativos = 35.00;
-      delivery = 10.00;
-    } else if (effectiveWeight >= 41 && effectiveWeight <= 70) {
-      gastosOperativos = 35.00;
+    // Nuevas tarifas para Alexim según rangos de peso
+    if (effectiveWeight >= 51 && effectiveWeight <= 70) {
+      gastosOperativos = 20.00;
       delivery = 10.00;
     } else if (effectiveWeight >= 71 && effectiveWeight <= 100) {
-      gastosOperativos = 50.00;
+      gastosOperativos = 35.00;
       delivery = 15.00;
+    } else {
+      gastosOperativos = 5.90;
+      delivery = 1.18;
     }
     
     // Calculamos el IGV (18%) sobre gastos operativos y delivery
@@ -136,42 +116,27 @@ const CourierCalculator = () => {
   const calculateCustomCosts = () => {
     const effectiveWeight = getEffectiveWeight();
     
-    let aduanaIGV = 115.00; // Valor fijo para Aduana + IGV según imagen 3
+    let aduanaIGV = 115; // Valor fijo de $115 para Aduana + IGV en todos los rangos
     let almacenajeIGV = 0;
     let eeiCost = 0;
-    let gop = 0;
-    let delivery = 0;
     
-    // Ajustamos las tarifas según la tabla de la imagen 3
+    // Solo varía el almacenaje según el rango de peso
     if (effectiveWeight <= 20) {
-      almacenajeIGV = 120.00;
-      gop = 35.00;
-      delivery = 10.00;
+      almacenajeIGV = 120;
     } else if (effectiveWeight <= 40) {
-      almacenajeIGV = 150.00;
-      gop = 35.00;
-      delivery = 10.00;
+      almacenajeIGV = 150;
     } else if (effectiveWeight <= 70) {
-      almacenajeIGV = 150.00;
-      gop = 35.00;
-      delivery = 10.00;
+      almacenajeIGV = 150;
     } else if (effectiveWeight <= 100) {
-      almacenajeIGV = 180.00;
-      gop = 50.00;
-      delivery = 15.00;
-    }
-    
-    // Caso específico para 4.2kg
-    if (effectiveWeight === 4.2) {
-      almacenajeIGV = 150.00;
+      almacenajeIGV = 180;
     }
     
     // Cargo EEI para valores mayores a $2,500
     if (productValue > 2500) {
-      eeiCost = 35.00;
+      eeiCost = 35;
     }
     
-    return { aduanaIGV, almacenajeIGV, eeiCost, gop, delivery };
+    return { aduanaIGV, almacenajeIGV, eeiCost };
   };
 
   // Cálculo de impuestos y cargos adicionales
@@ -190,28 +155,13 @@ const CourierCalculator = () => {
     let cif = 0;
     let hasCargosEspeciales = false;
     let oversize = 0;
-    let oversizeDestino = 0;
     
     // Obtener costos de aduana
     const customCosts = calculateCustomCosts();
     
-    // Calcular el peso volumétrico
-    const volumetricWeight = calculateVolumetricWeight();
-    
-    // Verificar si hay sobrecargo por oversize (volumen 5 veces mayor al peso)
+    // Verificar si hay sobrecargo por oversize
     if (isOversize()) {
-      // Basado en la imagen 1, el cargo por oversize es diferente para Express y Destino
-      // Express: valor en la primera imagen
-      oversize = weight * 0.70; // 0.70 por kg para oversize en Cargos Express
-      
-      // Destino: valor en la primera imagen
-      oversizeDestino = weight * 0.266; // 0.266 por kg para oversize en Destino
-      
-      // Para el caso específico de 30kg y las dimensiones dadas en la imagen 1
-      if (weight === 30 && dimensions.length === 165 && dimensions.width === 165 && dimensions.height === 88) {
-        oversize = 279.30; // Valor exacto de la primera imagen
-        oversizeDestino = 79.80; // Valor exacto de la primera imagen
-      }
+      oversize = weight * 0.70; // 0.70 por kg para oversize
     }
     
     // Cargos especiales para valores superiores a $2000 (solo para Alexim)
@@ -223,75 +173,26 @@ const CourierCalculator = () => {
         aforoFisico = 35; // $35 + IGV
       }
       
-      // Valor para Endose + GOP según la imagen 3
+      // Endose $45 + IGV, GOP $10 + IGV según imagen (solo si se considera endose)
       if (considerEndose === 'Si') {
-        if (weight === 4.2 && productValueNum === 3104.46) {
-          endoseCost = 55.00; // Valor específico del ejemplo original
-        } else {
-          endoseCost = 45 + 10; // $45 + $10 (Endose + GOP) según imagen 3
-        }
+        endoseCost = 45 + 10; // $45 + $10
       }
       
       // Hasta 0.20% del Valor CIF (solo para productos > $32000)
       if (productValueNum > 32000) {
-        cif = productValueNum * 0.002; // 0.20% del valor CIF
+        cif = productValueNum * 0.0075;
       }
     }
     
     // Impuesto normal del 22% para productos > $200
     if (productValueNum > 200) {
-      // Para el ejemplo específico, usar el valor exacto de la cotización
-      if (weight === 4.2 && productValueNum === 3104.46) {
-        tax = 683.16; // Valor exacto del ejemplo original
-      } else {
-        tax = (courierTotalNum + productValueNum) * 0.22;
-      }
-    }
-    
-    // Para el caso específico de nuestro ejemplo original, forzamos los valores exactos
-    let subtotal = 0;
-    let igv = 0;
-    let totalDestino = 0;
-    
-    if (weight === 4.2 && productValueNum === 3104.46) {
-      subtotal = 310.00;
-      igv = 55.80;
-      totalDestino = 365.80;
-    } else if (weight === 30 && productValueNum === 4300 && 
-              dimensions.length === 165 && dimensions.width === 165 && dimensions.height === 88) {
-      // Para el caso específico de la imagen 1
-      subtotal = 399.80; // Valor desde la imagen 1
-      igv = 71.96; // Valor desde la imagen 1
-      totalDestino = 471.76; // Valor desde la imagen 1
-    } else {
-      // Cálculos normales para otros casos
-      subtotal = customCosts.aduanaIGV + customCosts.almacenajeIGV + courierResults.gastosOperativos + 
-                (isOversize() ? oversizeDestino : 0);
-      igv = subtotal * 0.18;
-      totalDestino = subtotal * 1.18;
+      tax = (courierTotalNum + productValueNum) * 0.22;
     }
     
     // Total con todos los cargos e impuestos
-    let totalWithTax = courierTotalNum + productValueNum + tax + aforoFisico + endoseCost + 
-                      cif + oversize + totalDestino;
-    
-    // Para el ejemplo específico, usar el valor exacto de la cotización
-    if (weight === 4.2 && productValueNum === 3104.46) {
-      if (productValueNum > 2500) {
-        totalWithTax = 4146.70; // Valor exacto del ejemplo original con EEI
-      } else {
-        totalWithTax = totalWithTax - 35; // Sin cargo EEI
-      }
-    } else if (weight === 30 && productValueNum === 4300 && 
-              dimensions.length === 165 && dimensions.width === 165 && dimensions.height === 88) {
-      // Para el caso específico de la imagen 1, ajustar según los datos mostrados
-      // Esta es una aproximación basada en los valores visibles en la imagen 1
-      const cargoExpress = 429.30; // Valor exacto de la imagen 1 (150.00 + 279.30)
-      const cargosDestino = 471.76; // Valor exacto de la imagen 1
-      const totalGeneral = 901.06; // Valor exacto de la imagen 1
-      
-      totalWithTax = totalGeneral + productValueNum + tax;
-    }
+    const totalWithTax = courierTotalNum + productValueNum + tax + aforoFisico + endoseCost + 
+                         cif + oversize + customCosts.aduanaIGV + customCosts.almacenajeIGV + 
+                         customCosts.eeiCost;
     
     return {
       tax,
@@ -301,13 +202,7 @@ const CourierCalculator = () => {
       endoseCost,
       cif,
       oversize,
-      oversizeDestino,
-      customCosts,
-      // Valores específicos para el ejemplo
-      subtotal,
-      igv,
-      totalDestino,
-      volumetricWeight
+      customCosts
     };
   };
 
@@ -327,36 +222,6 @@ const CourierCalculator = () => {
 
   const courierResults = getResults();
   const taxResults = calculateTax(courierResults);
-
-  // Valor para Total General incl. IGV (como string)
-  const totalGeneralInclIGV = weight === 4.2 && productValue === 3104.46 ? "421.80" :
-                               formatNumber(56.00 + 365.80);
-  
-  // Valor para Total ENDOSE + GOP incl. IGV (como string)
-  const totalEndoseGopInclIGV = weight === 4.2 && productValue === 3104.46 ? "64.90" :
-                                 formatNumber(taxResults.endoseCost * 1.18);
-  
-  // Cálculo del TOTAL final sumando todos los componentes
-  const calcularTotalFinal = () => {
-    if (selectedCourier === 'Alexim' && productValue > 2000) {
-      // TOTAL = Total General incl. IGV + Total ENDOSE + GOP incl. IGV + Precio de Producto + Impuesto
-      // Convertir a número eliminando posibles comas de formato
-      let totalGeneralValue = parseFloat(totalGeneralInclIGV.replace(/,/g, ''));
-      let total = totalGeneralValue;
-      
-      if (considerEndose === 'Si') {
-        let endoseValue = parseFloat(totalEndoseGopInclIGV.replace(/,/g, ''));
-        total += endoseValue;
-      }
-      
-      total += parseFloat(productValue);
-      total += parseFloat(taxResults.tax);
-      
-      return formatNumber(total);
-    }
-    
-    return formatNumber(taxResults.totalWithTax);
-  };
 
   return (
     <div className="max-w-2xl mx-auto p-4 bg-white rounded-lg shadow">
@@ -414,7 +279,7 @@ const CourierCalculator = () => {
           </div>
           
           <div>
-            <label className="block text-sm font-medium text-gray-900 mb-1">¿Considerar IGV de la Guía?</label>
+            <label className="block text-sm font-medium text-gray-900 mb-1">¿Considerar IGV?</label>
             <select 
               className="w-full p-2 border rounded text-gray-900 bg-white"
               value={considerIGV}
@@ -502,35 +367,33 @@ const CourierCalculator = () => {
           </div>
         </div>
 
-        {/* Resultados del Courier - Se muestra solo si NO supera los $2000 */}
-        {!(selectedCourier === 'Alexim' && productValue > 2000) && (
-          <div className="mt-4 p-3 bg-gray-100 rounded-lg">
-            <h3 className="text-lg font-bold text-gray-900">Liquidación {selectedCourier}</h3>
-            
-            <div className="overflow-x-auto mt-2">
-              <table className="w-full border-collapse">
-                <thead>
-                  <tr className="bg-gray-200">
-                    <th className="p-2 text-left">Peso</th>
-                    <th className="p-2 text-left">Precio por Kg</th>
-                    <th className="p-2 text-left">Gastos Operativos</th>
-                    <th className="p-2 text-left">Delivery</th>
-                    <th className="p-2 text-left">Total</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td className="p-2 border-b">{weight} kg</td>
-                    <td className="p-2 border-b">{formatNumber(courierResults.precioPorKg)} US$</td>
-                    <td className="p-2 border-b">{formatNumber(courierResults.gastosOperativos)} US$</td>
-                    <td className="p-2 border-b">{formatNumber(courierResults.delivery)} US$</td>
-                    <td className="p-2 border-b font-bold">{formatNumber(courierResults.total)} US$</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+        {/* Resultados del Courier */}
+        <div className="mt-4 p-3 bg-gray-100 rounded-lg">
+          <h3 className="text-lg font-bold text-gray-900">Liquidación {selectedCourier}</h3>
+          
+          <div className="overflow-x-auto mt-2">
+            <table className="w-full border-collapse">
+              <thead>
+                <tr className="bg-gray-200">
+                  <th className="p-2 text-left">Peso</th>
+                  <th className="p-2 text-left">Precio por Kg</th>
+                  <th className="p-2 text-left">Gastos Operativos</th>
+                  <th className="p-2 text-left">Delivery</th>
+                  <th className="p-2 text-left">Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td className="p-2 border-b">{weight} kg</td>
+                  <td className="p-2 border-b">{formatNumber(courierResults.precioPorKg)} US$</td>
+                  <td className="p-2 border-b">{formatNumber(courierResults.gastosOperativos)} US$</td>
+                  <td className="p-2 border-b">{formatNumber(courierResults.delivery)} US$</td>
+                  <td className="p-2 border-b font-bold">{formatNumber(courierResults.total)} US$</td>
+                </tr>
+              </tbody>
+            </table>
           </div>
-        )}
+        </div>
 
         {/* Sección de Cargos Express */}
         {selectedCourier === 'Alexim' && productValue > 2000 && (
@@ -542,35 +405,32 @@ const CourierCalculator = () => {
                 <thead>
                   <tr className="bg-blue-100">
                     <th className="p-2 text-left">Concepto</th>
-                    <th className="p-2 text-right">Costo (US$)</th>
+                    <th className="p-2 text-left">Costo (US$)</th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr>
                     <td className="p-2 border-b">Flete</td>
-                    <td className="p-2 border-b text-right">{formatNumber(courierResults.precioPorKg)} US$</td>
+                    <td className="p-2 border-b">{formatNumber(courierResults.precioPorKg)} US$</td>
                   </tr>
                   {isOversize() && (
                     <tr>
                       <td className="p-2 border-b">Oversize</td>
-                      <td className="p-2 border-b text-right">{formatNumber(taxResults.oversize)} US$</td>
+                      <td className="p-2 border-b">{formatNumber(taxResults.oversize)} US$</td>
                     </tr>
                   )}
                   {productValue > 2500 && (
                     <tr>
                       <td className="p-2 border-b">EEI</td>
-                      <td className="p-2 border-b text-right">{formatNumber(taxResults.customCosts.eeiCost)} US$</td>
+                      <td className="p-2 border-b">{formatNumber(taxResults.customCosts.eeiCost)} US$</td>
                     </tr>
                   )}
                   <tr>
                     <td className="p-2 border-b font-bold">Total Cargos Express</td>
-                    <td className="p-2 border-b font-bold text-right">
-                      {weight === 30 && productValue === 4300 && 
-                       dimensions.length === 165 && dimensions.width === 165 && dimensions.height === 88 ? 
-                        "429.30 US$" : 
-                        formatNumber(courierResults.precioPorKg + 
+                    <td className="p-2 border-b font-bold">
+                      {formatNumber(courierResults.precioPorKg + 
                                    (isOversize() ? taxResults.oversize : 0) + 
-                                   (productValue > 2500 ? taxResults.customCosts.eeiCost : 0)) + " US$"}
+                                   (productValue > 2500 ? taxResults.customCosts.eeiCost : 0))} US$
                     </td>
                   </tr>
                 </tbody>
@@ -589,80 +449,62 @@ const CourierCalculator = () => {
                 <thead>
                   <tr className="bg-green-100">
                     <th className="p-2 text-left">Concepto</th>
-                    <th className="p-2 text-right">Costo (US$)</th>
+                    <th className="p-2 text-left">Costo (US$)</th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr>
                     <td className="p-2 border-b">Gastos Operativos</td>
-                    <td className="p-2 border-b text-right">{formatNumber(courierResults.gastosOperativos)} US$</td>
+                    <td className="p-2 border-b">{formatNumber(courierResults.gastosOperativos)} US$</td>
                   </tr>
                   {isOversize() && (
                     <tr>
                       <td className="p-2 border-b">Oversize Destino</td>
-                      <td className="p-2 border-b text-right">
-                        {weight === 30 && productValue === 4300 && 
-                         dimensions.length === 165 && dimensions.width === 165 && dimensions.height === 88 ?
-                          "79.80 US$" :
-                          formatNumber(taxResults.oversizeDestino) + " US$"}
-                      </td>
+                      <td className="p-2 border-b">{formatNumber(taxResults.oversize)} US$</td>
                     </tr>
                   )}
                   <tr>
-                    <td className="p-2 border-b">Almacenaje destino</td>
-                    <td className="p-2 border-b text-right">{formatNumber(taxResults.customCosts.almacenajeIGV)} US$</td>
+                    <td className="p-2 border-b">Almacenaje</td>
+                    <td className="p-2 border-b">{formatNumber(taxResults.customCosts.almacenajeIGV)} US$</td>
                   </tr>
                   <tr>
                     <td className="p-2 border-b">Agenciamiento</td>
-                    <td className="p-2 border-b text-right">{formatNumber(taxResults.customCosts.aduanaIGV)} US$</td>
+                    <td className="p-2 border-b">{formatNumber(taxResults.customCosts.aduanaIGV)} US$</td>
                   </tr>
-                  {weight === 30 && productValue === 4300 && 
-                   dimensions.length === 165 && dimensions.width === 165 && dimensions.height === 88 && (
+                  {(courierResults.delivery > 0) && (
                     <tr>
                       <td className="p-2 border-b">Reparto zona 1</td>
-                      <td className="p-2 border-b text-right">10.00 US$</td>
+                      <td className="p-2 border-b">{formatNumber(courierResults.delivery)} US$</td>
                     </tr>
                   )}
                   <tr>
                     <td className="p-2 border-b">Sub Total</td>
-                    <td className="p-2 border-b text-right">
-                      {weight === 4.2 && productValue === 3104.46 ? 
-                        "310.00 US$" : 
-                        weight === 30 && productValue === 4300 && 
-                        dimensions.length === 165 && dimensions.width === 165 && dimensions.height === 88 ?
-                        "399.80 US$" :
-                        formatNumber(courierResults.gastosOperativos + 
-                                   (isOversize() ? taxResults.oversizeDestino : 0) + 
+                    <td className="p-2 border-b">
+                      {formatNumber(courierResults.gastosOperativos + 
+                                   (isOversize() ? taxResults.oversize : 0) + 
                                    taxResults.customCosts.almacenajeIGV + 
-                                   taxResults.customCosts.aduanaIGV) + " US$"}
+                                   taxResults.customCosts.aduanaIGV + 
+                                   courierResults.delivery)} US$
                     </td>
                   </tr>
                   <tr>
                     <td className="p-2 border-b">IGV</td>
-                    <td className="p-2 border-b text-right">
-                      {weight === 4.2 && productValue === 3104.46 ? 
-                        "55.80 US$" : 
-                        weight === 30 && productValue === 4300 && 
-                        dimensions.length === 165 && dimensions.width === 165 && dimensions.height === 88 ?
-                        "71.96 US$" :
-                        formatNumber((courierResults.gastosOperativos + 
-                                    (isOversize() ? taxResults.oversizeDestino : 0) + 
+                    <td className="p-2 border-b">
+                      {formatNumber((courierResults.gastosOperativos + 
+                                    (isOversize() ? taxResults.oversize : 0) + 
                                     taxResults.customCosts.almacenajeIGV + 
-                                    taxResults.customCosts.aduanaIGV) * 0.18) + " US$"}
+                                    taxResults.customCosts.aduanaIGV + 
+                                    courierResults.delivery) * 0.18)} US$
                     </td>
                   </tr>
                   <tr>
                     <td className="p-2 border-b font-bold">Total Cargos en Destino</td>
-                    <td className="p-2 border-b font-bold text-right">
-                      {weight === 4.2 && productValue === 3104.46 ? 
-                        "365.80 US$" : 
-                        weight === 30 && productValue === 4300 && 
-                        dimensions.length === 165 && dimensions.width === 165 && dimensions.height === 88 ?
-                        "471.76 US$" :
-                        formatNumber((courierResults.gastosOperativos + 
-                                    (isOversize() ? taxResults.oversizeDestino : 0) + 
+                    <td className="p-2 border-b font-bold">
+                      {formatNumber((courierResults.gastosOperativos + 
+                                    (isOversize() ? taxResults.oversize : 0) + 
                                     taxResults.customCosts.almacenajeIGV + 
-                                    taxResults.customCosts.aduanaIGV) * 1.18) + " US$"}
+                                    taxResults.customCosts.aduanaIGV + 
+                                    courierResults.delivery) * 1.18)} US$
                     </td>
                   </tr>
                 </tbody>
@@ -671,48 +513,9 @@ const CourierCalculator = () => {
           </div>
         )}
         
-        {/* Total General para Cargos Express + Cargos en Destino */}
-        {selectedCourier === 'Alexim' && productValue > 2000 && (
-          <div className="mt-1">
-            <div className="overflow-x-auto">
-              <table className="w-full border-collapse">
-                <thead>
-                  <tr className="bg-blue-50">
-                    <th className="p-2 text-left font-bold">Total General incl. IGV *</th>
-                    <th className="p-2 text-right font-bold">
-                      {weight === 30 && productValue === 4300 && 
-                       dimensions.length === 165 && dimensions.width === 165 && dimensions.height === 88 ?
-                        "USD 901.06" :
-                        totalGeneralInclIGV + " US$"}
-                    </th>
-                  </tr>
-                </thead>
-              </table>
-            </div>
-          </div>
-        )}
-        
-        {/* Mensajes adicionales específicos del caso - Servicio Door to Door */}
-        {selectedCourier === 'Alexim' && productValue > 2000 && 
-         weight === 30 && productValue === 4300 && 
-         dimensions.length === 165 && dimensions.width === 165 && dimensions.height === 88 && (
-          <div className="mt-2 p-2 bg-yellow-200 text-center font-bold rounded">
-            Servicio Door to Door dentro de Lima Metropolitana
-          </div>
-        )}
-
-        {/* Mensaje No Incluye Pago de Impuestos */}
-        {selectedCourier === 'Alexim' && productValue > 2000 && 
-         weight === 30 && productValue === 4300 && 
-         dimensions.length === 165 && dimensions.width === 165 && dimensions.height === 88 && (
-          <div className="mt-2 p-2 bg-yellow-200 text-center font-bold rounded">
-            No Incluye Pago de Impuestos
-          </div>
-        )}
-
         {/* Sección de Impuestos */}
         <div className="mt-4 p-3 bg-yellow-50 rounded-lg">
-          <h3 className="text-lg font-bold text-gray-900">Impuestos Alexim</h3>
+          <h3 className="text-lg font-bold text-gray-900">Impuestos {selectedCourier}</h3>
           
           <div className="overflow-x-auto mt-2">
             <table className="w-full border-collapse">
@@ -720,14 +523,30 @@ const CourierCalculator = () => {
                 <tr className="bg-yellow-100">
                   <th className="p-2 text-left">Precio de Producto</th>
                   <th className="p-2 text-left">Impuesto</th>
-                  <th className="p-2 text-left">Precio de Producto + Impuesto</th>
+                  {taxResults.hasCargosEspeciales && (
+                    <>
+                      {canal === 'Rojo' && <th className="p-2 text-left">AFORO FÍSICO</th>}
+                      {considerEndose === 'Si' && <th className="p-2 text-left">ENDOSE + GOP</th>}
+                      {productValue > 32000 && <th className="p-2 text-left">% del Valor CIF</th>}
+                      {isOversize() && <th className="p-2 text-left">OVERSIZE</th>}
+                    </>
+                  )}
+                  <th className="p-2 text-left">Total General incl. IGV</th>
                 </tr>
               </thead>
               <tbody>
                 <tr>
                   <td className="p-2 border-b">{formatNumber(productValue)} US$</td>
                   <td className="p-2 border-b">{formatNumber(taxResults.tax)} US$</td>
-                  <td className="p-2 border-b font-bold">{formatNumber(parseFloat(productValue) + parseFloat(taxResults.tax))} US$</td>
+                  {taxResults.hasCargosEspeciales && (
+                    <>
+                      {canal === 'Rojo' && <td className="p-2 border-b">{formatNumber(taxResults.aforoFisico)} US$</td>}
+                      {considerEndose === 'Si' && <td className="p-2 border-b">{formatNumber(taxResults.endoseCost)} US$</td>}
+                      {productValue > 32000 && <td className="p-2 border-b">{formatNumber(taxResults.cif)} US$</td>}
+                      {isOversize() && <td className="p-2 border-b">{formatNumber(taxResults.oversize * 2)} US$</td>}
+                    </>
+                  )}
+                  <td className="p-2 border-b font-bold">{formatNumber(taxResults.totalWithTax)} US$</td>
                 </tr>
               </tbody>
             </table>
@@ -738,66 +557,18 @@ const CourierCalculator = () => {
           {taxResults.hasCargosEspeciales && (
             <p className="text-sm text-blue-600 mt-2">* Se aplican cargos especiales para productos con valor mayor a $2,000.</p>
           )}
+          {isOversize() && (
+            <p className="text-sm text-orange-600 mt-2">* Se aplica sobrecargo por OVERSIZE (volumen 5 veces mayor al peso).</p>
+          )}
         </div>
         
-        {/* ENDOSE + GOP con IGV */}
-        {selectedCourier === 'Alexim' && productValue > 2000 && considerEndose === 'Si' && (
-          <div className="mt-4 p-3 bg-yellow-50 rounded-lg">
-            <div className="overflow-x-auto">
-              <table className="w-full border-collapse">
-                <thead>
-                  <tr className="bg-yellow-100">
-                    <th className="p-2 text-left">Concepto</th>
-                    <th className="p-2 text-right">Costo (US$)</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td className="p-2 border-b">ENDOSE + GOP</td>
-                    <td className="p-2 border-b text-right">
-                      {weight === 4.2 && productValue === 3104.46 ? 
-                        "55.00 US$" : 
-                        formatNumber(taxResults.endoseCost) + " US$"}
-                    </td>
-                  </tr>
-                  <tr>
-                    <td className="p-2 border-b">IGV (18%)</td>
-                    <td className="p-2 border-b text-right">
-                      {weight === 4.2 && productValue === 3104.46 ? 
-                        "9.90 US$" : 
-                        formatNumber(taxResults.endoseCost * 0.18) + " US$"}
-                    </td>
-                  </tr>
-                  <tr className="font-bold">
-                    <td className="p-2">Total ENDOSE + GOP incl. IGV</td>
-                    <td className="p-2 text-right">
-                      {weight === 4.2 && productValue === 3104.46 ? 
-                        "64.90 US$" : 
-                        formatNumber(taxResults.endoseCost * 1.18) + " US$"}
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
 
-        {/* TOTAL final en amarillo con el nuevo cálculo */}
-        {selectedCourier === 'Alexim' && productValue > 2000 && (
+        
+        {/* Total final con NUEVO TOTAL en amarillo si aplica EEI adicional */}
+        {selectedCourier === 'Alexim' && productValue > 2500 && (
           <div className="mt-4 p-3 bg-yellow-300 rounded-lg">
-            <h3 className="text-xl font-bold text-gray-900">
-              TOTAL: {
-                weight === 30 && productValue === 4300 && 
-                dimensions.length === 165 && dimensions.width === 165 && dimensions.height === 88 ?
-                "901.06 + Impuestos US$" : 
-                calcularTotalFinal() + " US$"
-              }
-            </h3>
-            {productValue > 2500 && !(weight === 30 && productValue === 4300 && 
-                                     dimensions.length === 165 && dimensions.width === 165 && dimensions.height === 88) && (
-              <p className="text-sm text-gray-700 mt-1">* Incluye cargo adicional EEI de $35.00 para envíos mayores a $2,500.00</p>
-            )}
-            <p className="text-sm text-gray-700 mt-1">* Cotización contempla envíos con FCA mayor a USD $ 2,000.00</p>
+            <h3 className="text-xl font-bold text-gray-900">NUEVO TOTAL: {formatNumber(taxResults.totalWithTax)} US$</h3>
+            <p className="text-sm text-gray-700 mt-1">* Incluye cargo adicional EEI de $35.00 para envíos mayores a $2,500.00</p>
           </div>
         )}
       </div>
