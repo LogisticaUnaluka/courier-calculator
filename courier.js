@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+const { useState } = React;
 
 const CourierCalculator = () => {
   // Estados para el peso y valor del producto con valores iniciales
@@ -80,30 +80,23 @@ const CourierCalculator = () => {
       precioPorKg = effectiveWeight * 5.00;
       if (effectiveWeight === 4.2) {
         precioPorKg = 21.00; // Valor exacto para el caso específico
-      } else if (effectiveWeight >= 21 && effectiveWeight <= 40) {
-        precioPorKg = 150.00; // Tarifa fija según la imagen 1
       }
-    } else if (effectiveWeight >= 21 && effectiveWeight <= 40) {
-      precioPorKg = 150.00;
-    } else if (effectiveWeight >= 41 && effectiveWeight <= 70) {
-      precioPorKg = 150.00;
-    } else if (effectiveWeight >= 71 && effectiveWeight <= 100) {
-      precioPorKg = 150.00;
+    } else if (effectiveWeight >= 21 && effectiveWeight <= 50) {
+      precioPorKg = effectiveWeight * 5.00;
+    } else if (effectiveWeight >= 51 && effectiveWeight <= 70) {
+      precioPorKg = effectiveWeight * 5.00;
+      gastosOperativos = 20.00;
+      delivery = 10.00;
+    } else if (effectiveWeight >= 71) {
+      precioPorKg = effectiveWeight * 5.00;
+      gastosOperativos = 35.00;
+      delivery = 15.00;
     }
     
-    // Gastos operativos y delivery según la tabla de la imagen 3
-    if (effectiveWeight <= 20) {
-      gastosOperativos = 35.00;
-      delivery = 10.00;
-    } else if (effectiveWeight >= 21 && effectiveWeight <= 40) {
-      gastosOperativos = 35.00;
-      delivery = 10.00;
-    } else if (effectiveWeight >= 41 && effectiveWeight <= 70) {
-      gastosOperativos = 35.00;
-      delivery = 10.00;
-    } else if (effectiveWeight >= 71 && effectiveWeight <= 100) {
-      gastosOperativos = 50.00;
-      delivery = 15.00;
+    // Para pesos hasta 50kg, usar los valores originales
+    if (effectiveWeight <= 50) {
+      gastosOperativos = 5.90;
+      delivery = 1.18;
     }
     
     // Calculamos el IGV (18%) sobre gastos operativos y delivery
@@ -142,7 +135,7 @@ const CourierCalculator = () => {
     let gop = 0;
     let delivery = 0;
     
-    // Ajustamos las tarifas según la tabla de la imagen 3
+    // Ajustamos las tarifas según la tabla
     if (effectiveWeight <= 20) {
       almacenajeIGV = 120.00;
       gop = 35.00;
@@ -234,7 +227,7 @@ const CourierCalculator = () => {
       
       // Hasta 0.20% del Valor CIF (solo para productos > $32000)
       if (productValueNum > 32000) {
-        cif = productValueNum * 0.002; // 0.20% del valor CIF
+        cif = productValueNum * 0.0075; // 0.075% del valor CIF
       }
     }
     
@@ -362,12 +355,13 @@ const CourierCalculator = () => {
     <div className="max-w-2xl mx-auto p-4 bg-white rounded-lg shadow">
       {/* Header con logos */}
       <div className="flex justify-between items-center mb-4">
-        <div className="w-1/3">
-          <h2 className="text-lg font-bold text-blue-700">UNALUKA</h2>
+        <div className="w-1/3 flex space-x-2">
+          <img src="https://github.com/user-attachments/assets/d747658e-ecbf-4636-8790-8ca515ed6658" alt="Unaluka-com" className="h-12" />
+          <img src="https://github.com/user-attachments/assets/47baaf3b-d1b7-4b37-bc2e-1b17f4ae8b49" alt="Unaluka-global" className="h-12" />
         </div>
         <h1 className="text-xl font-bold text-gray-900 text-center w-1/3">Cotizador de Courier</h1>
         <div className="w-1/3 flex justify-end">
-          <h2 className="text-lg font-bold text-blue-700">AZTRA</h2>
+          <img src="https://github.com/user-attachments/assets/2c3b386c-4af8-41a0-8b20-562bd4bdb291" alt="Aztra" className="h-12" />
         </div>
       </div>
       
@@ -712,7 +706,7 @@ const CourierCalculator = () => {
 
         {/* Sección de Impuestos */}
         <div className="mt-4 p-3 bg-yellow-50 rounded-lg">
-          <h3 className="text-lg font-bold text-gray-900">Impuestos Alexim</h3>
+          <h3 className="text-lg font-bold text-gray-900">Impuestos {selectedCourier}</h3>
           
           <div className="overflow-x-auto mt-2">
             <table className="w-full border-collapse">
@@ -805,4 +799,5 @@ const CourierCalculator = () => {
   );
 };
 
-export default CourierCalculator;
+// Renderiza el componente en el DOM
+ReactDOM.render(<CourierCalculator />, document.getElementById('root'));
