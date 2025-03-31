@@ -213,7 +213,7 @@ const CourierCalculator = () => {
       
       // Si es canal rojo, agregar AFORO FÍSICO
       if (canal === 'Rojo') {
-        aforoFisico = 35; // $35 + IGV
+        aforoFisico = 35; // $35 + IGV - este valor se usará más adelante en los cálculos
       }
       
       // Valor para Endose + GOP según la imagen 3
@@ -723,6 +723,14 @@ const CourierCalculator = () => {
                   <td className="p-2 border-b">{formatNumber(taxResults.tax)} US$</td>
                   <td className="p-2 border-b font-bold">{formatNumber(parseFloat(productValue) + parseFloat(taxResults.tax))} US$</td>
                 </tr>
+                {/* Mostrar AFORO FÍSICO si es canal Rojo y valor > $2000 */}
+                {selectedCourier === 'Alexim' && productValue > 2000 && canal === 'Rojo' && (
+                  <tr>
+                    <td className="p-2 border-b">AFORO FÍSICO</td>
+                    <td className="p-2 border-b">{formatNumber(35)} US$</td>
+                    <td className="p-2 border-b">IGV: {formatNumber(35 * 0.18)} US$</td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
@@ -731,6 +739,9 @@ const CourierCalculator = () => {
           )}
           {taxResults.hasCargosEspeciales && (
             <p className="text-sm text-blue-600 mt-2">* Se aplican cargos especiales para productos con valor mayor a $2,000.</p>
+          )}
+          {selectedCourier === 'Alexim' && productValue > 2000 && canal === 'Rojo' && (
+            <p className="text-sm text-orange-600 mt-2">* Se aplica AFORO FÍSICO ($35 + IGV) por selección de Canal Rojo.</p>
           )}
         </div>
         
@@ -776,7 +787,7 @@ const CourierCalculator = () => {
           </div>
         )}
 
-        {/* TOTAL final en amarillo con el nuevo cálculo */}
+        {/* TOTAL final en amarillo con el nuevo cálculo - para valor mayor a $2000 */}
         {selectedCourier === 'Alexim' && productValue > 2000 && (
           <div className="mt-4 p-3 bg-yellow-300 rounded-lg">
             <h3 className="text-xl font-bold text-gray-900">
@@ -792,6 +803,16 @@ const CourierCalculator = () => {
               <p className="text-sm text-gray-700 mt-1">* Incluye cargo adicional EEI de $35.00 para envíos mayores a $2,500.00</p>
             )}
             <p className="text-sm text-gray-700 mt-1">* Cotización contempla envíos con FCA mayor a USD $ 2,000.00</p>
+          </div>
+        )}
+        
+        {/* TOTAL final para cotizaciones con valor menor o igual a $2000 */}
+        {!(selectedCourier === 'Alexim' && productValue > 2000) && (
+          <div className="mt-4 p-3 bg-yellow-300 rounded-lg">
+            <h3 className="text-xl font-bold text-gray-900">
+              TOTAL: {formatNumber(parseFloat(courierResults.total) + parseFloat(productValue) + parseFloat(taxResults.tax))} US$
+            </h3>
+            <p className="text-sm text-gray-700 mt-1">* Total = Precio de Producto + Liquidación Courier + Impuesto</p>
           </div>
         )}
       </div>
