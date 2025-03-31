@@ -57,27 +57,35 @@ const CourierCalculator = () => {
     const gastosOperativos = 5.90;
     const delivery = 1.18;
     
-    // Ajustar el total según la opción de IGV para Alexim
-    let total = precioPorKg + gastosOperativos + delivery;
+    // Calcular el total sin ajustes (para usarlo en el cálculo de impuestos)
+    const totalWithIGV = precioPorKg + gastosOperativos + delivery;
+    
+    // Ajustar el total según la opción de IGV para la visualización de liquidación
+    let displayTotal = totalWithIGV;
     
     // Si se selecciona "No" para considerar IGV, se resta 1.08 del total solo para Alexim
     if (considerIGV === 'No') {
-      total = total - 1.08;
+      displayTotal = totalWithIGV - 1.08;
     }
     
     return {
       precioPorKg: precioPorKg,
       gastosOperativos: gastosOperativos,
       delivery: delivery,
-      total: total
+      total: displayTotal,
+      totalForTax: totalWithIGV // Total real para cálculo de impuestos
     };
   };
 
   // Cálculo de impuestos - aplicado cuando es mayor a 200
-  const calculateTax = (courierTotal) => {
+  const calculateTax = (courierData) => {
     // Convertimos a números para asegurar comparación correcta
     const productValueNum = parseFloat(productValue);
-    const courierTotalNum = parseFloat(courierTotal);
+    
+    // Usamos el total correcto para impuestos (sin descontar IGV)
+    const courierTotalNum = courierData.totalForTax !== undefined ? 
+                            parseFloat(courierData.totalForTax) : 
+                            parseFloat(courierData.total);
     
     if (productValueNum > 200) {
       const tax = (courierTotalNum + productValueNum) * 0.22;
@@ -109,7 +117,7 @@ const CourierCalculator = () => {
   };
 
   const courierResults = getResults();
-  const taxResults = calculateTax(courierResults.total);
+  const taxResults = calculateTax(courierResults);
 
   return (
     <div className="max-w-2xl mx-auto p-4 bg-white rounded-lg shadow">
@@ -178,7 +186,7 @@ const CourierCalculator = () => {
               <option value="No">No</option>
             </select>
             {selectedCourier === 'Alexim' && considerIGV === 'No' && (
-              <p className="text-xs text-blue-600 mt-1">* Se restará $1.08 del total.</p>
+              <p className="text-xs text-blue-600 mt-1">* Se restará $1.08 del total en liquidación.</p>
             )}
           </div>
         </div>
