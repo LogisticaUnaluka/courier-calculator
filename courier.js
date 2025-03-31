@@ -1,9 +1,9 @@
 const { useState } = React;
 
 const CourierCalculator = () => {
-  // Estados para el peso y valor del producto
-  const [weight, setWeight] = useState(5);
-  const [productValue, setProductValue] = useState(8000);
+  // Estados para el peso y valor del producto con valores iniciales corregidos
+  const [weight, setWeight] = useState(1);
+  const [productValue, setProductValue] = useState(20);
   const [selectedCourier, setSelectedCourier] = useState('Alexim');
 
   // Función para formatear números con separador de miles
@@ -14,9 +14,15 @@ const CourierCalculator = () => {
     });
   };
 
-  // Cálculos para cada courier con las fórmulas corregidas
+  // Función para asegurar que el peso mínimo sea 1 kg para los cálculos
+  const getEffectiveWeight = () => {
+    return Math.max(1, weight);
+  };
+
+  // Cálculos para cada courier con las fórmulas corregidas y peso mínimo
   const calculateMSL = () => {
-    const precioPorKg = weight * 8.00;
+    const effectiveWeight = getEffectiveWeight();
+    const precioPorKg = effectiveWeight * 8.00;
     const gastosOperativos = 11.80;
     const delivery = 5.90;
     const total = precioPorKg + gastosOperativos + delivery;
@@ -30,7 +36,8 @@ const CourierCalculator = () => {
   };
 
   const calculateFirstClass = () => {
-    const precioPorKg = weight * 6.50;
+    const effectiveWeight = getEffectiveWeight();
+    const precioPorKg = effectiveWeight * 6.50;
     const gastosOperativos = 6.00;
     const delivery = 10.00;
     const total = precioPorKg + gastosOperativos + delivery;
@@ -44,7 +51,8 @@ const CourierCalculator = () => {
   };
 
   const calculateAlexim = () => {
-    const precioPorKg = weight * 5.00;
+    const effectiveWeight = getEffectiveWeight();
+    const precioPorKg = effectiveWeight * 5.00;
     const gastosOperativos = 5.90;
     const delivery = 1.18;
     const total = precioPorKg + gastosOperativos + delivery;
@@ -94,6 +102,7 @@ const CourierCalculator = () => {
 
   const courierResults = getResults();
   const taxResults = calculateTax(courierResults.total);
+  const effectiveWeight = getEffectiveWeight();
 
   return (
     <div className="max-w-2xl mx-auto p-4 bg-white rounded-lg shadow">
@@ -131,9 +140,12 @@ const CourierCalculator = () => {
               min="0.1"
               step="0.1"
               value={weight}
-              onChange={(e) => setWeight(parseFloat(e.target.value) || 1)}
+              onChange={(e) => setWeight(parseFloat(e.target.value) || 0.1)}
               className="w-full p-2 border rounded text-gray-900 bg-white"
             />
+            {weight < 1 && (
+              <p className="text-xs text-orange-600 mt-1">* Se aplicará tarifa mínima de 1 kg.</p>
+            )}
           </div>
 
           <div>
