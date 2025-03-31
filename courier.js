@@ -95,33 +95,34 @@ const CourierCalculator = () => {
     
     // Para pesos hasta 50kg, usar los valores originales
     if (effectiveWeight <= 50) {
+      // Valores con IGV incluido
       gastosOperativos = 5.90;
       delivery = 1.18;
     }
     
-    // Calculamos el IGV (18%) sobre gastos operativos y delivery
-    const igvGastosOperativos = gastosOperativos * 0.18;
-    const igvDelivery = delivery * 0.18;
+    // Valores sin IGV (precio base)
+    const gastosOperativosSinIGV = effectiveWeight <= 50 ? 5.00 : gastosOperativos / 1.18;
+    const deliverySinIGV = effectiveWeight <= 50 ? 1.00 : delivery / 1.18;
     
-    // Total con IGV
-    const totalWithIGV = precioPorKg + gastosOperativos + delivery;
+    // Calculamos el IGV (18%) sobre gastos operativos y delivery
+    const igvGastosOperativos = gastosOperativosSinIGV * 0.18;
+    const igvDelivery = deliverySinIGV * 0.18;
+    
+    // Total con y sin IGV
+    let totalWithIGV = precioPorKg + gastosOperativos + delivery;
+    let totalWithoutIGV = precioPorKg + gastosOperativosSinIGV + deliverySinIGV;
     
     // Ajustar el total según la opción de IGV para la visualización de liquidación
-    let displayTotal = totalWithIGV;
-    
-    // Si se selecciona "No" para considerar IGV, se resta el IGV del total
-    if (considerIGV === 'No') {
-      displayTotal = totalWithIGV - (igvGastosOperativos + igvDelivery);
-    }
+    const displayTotal = considerIGV === 'Si' ? totalWithIGV : totalWithoutIGV;
     
     return {
       precioPorKg: precioPorKg,
-      gastosOperativos: gastosOperativos,
-      delivery: delivery,
+      gastosOperativos: considerIGV === 'Si' ? gastosOperativos : gastosOperativosSinIGV,
+      delivery: considerIGV === 'Si' ? delivery : deliverySinIGV,
       igvGastosOperativos: igvGastosOperativos,
       igvDelivery: igvDelivery,
       total: displayTotal,
-      totalForTax: totalWithIGV // Total real para cálculo de impuestos
+      totalForTax: totalWithIGV // Total real para cálculo de impuestos (siempre con IGV para cálculos posteriores)
     };
   };
 
@@ -418,7 +419,7 @@ const CourierCalculator = () => {
               <option value="No">No</option>
             </select>
             {selectedCourier === 'Alexim' && considerIGV === 'No' && (
-              <p className="text-xs text-blue-600 mt-1">* Se resta el IGV de gastos operativos (${courierResults.igvGastosOperativos?.toFixed(2)}) y delivery (${courierResults.igvDelivery?.toFixed(2)}).</p>
+              <p className="text-xs text-blue-600 mt-1">* Se resta el IGV de gastos operativos ($0.90) y delivery ($0.18).</p>
             )}
           </div>
           
