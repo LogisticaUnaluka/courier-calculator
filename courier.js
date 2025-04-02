@@ -72,8 +72,6 @@ const CourierCalculator = () => {
   const calculateAlexim = () => {
     const effectiveWeight = getEffectiveWeight();
     let precioPorKg = 0;
-    let gastosOperativos = 0;
-    let delivery = 0;
     
     // Tarifa de flete basada en peso actual
     if (effectiveWeight <= 20) {
@@ -81,46 +79,50 @@ const CourierCalculator = () => {
       if (effectiveWeight === 4.2) {
         precioPorKg = 21.00; // Valor exacto para el caso específico
       }
-    } else if (effectiveWeight >= 21 && effectiveWeight <= 50) {
+    } else {
       precioPorKg = effectiveWeight * 5.00;
-    } else if (effectiveWeight >= 51 && effectiveWeight <= 70) {
-      precioPorKg = effectiveWeight * 5.00;
-      gastosOperativos = 20.00;
-      delivery = 10.00;
-    } else if (effectiveWeight >= 71) {
-      precioPorKg = effectiveWeight * 5.00;
-      gastosOperativos = 35.00;
-      delivery = 15.00;
     }
     
-    // Para pesos hasta 50kg, usar los valores originales
+    // Determinar valores base (sin IGV) para gastos operativos y delivery según el peso
+    let gastosOperativosSinIGV = 0;
+    let deliverySinIGV = 0;
+    
     if (effectiveWeight <= 50) {
-      // Valores con IGV incluido
-      gastosOperativos = 5.90;
-      delivery = 1.18;
+      gastosOperativosSinIGV = 5.00;
+      deliverySinIGV = 1.00;
+    } else if (effectiveWeight >= 51 && effectiveWeight <= 70) {
+      gastosOperativosSinIGV = 20.00;
+      deliverySinIGV = 10.00;
+    } else if (effectiveWeight >= 71) {
+      gastosOperativosSinIGV = 35.00;
+      deliverySinIGV = 15.00;
     }
-    
-    // Valores sin IGV (precio base)
-    const gastosOperativosSinIGV = effectiveWeight <= 50 ? 5.00 : gastosOperativos / 1.18;
-    const deliverySinIGV = effectiveWeight <= 50 ? 1.00 : delivery / 1.18;
     
     // Calculamos el IGV (18%) sobre gastos operativos y delivery
     const igvGastosOperativos = gastosOperativosSinIGV * 0.18;
     const igvDelivery = deliverySinIGV * 0.18;
     
+    // Valores con IGV incluido
+    const gastosOperativosConIGV = gastosOperativosSinIGV + igvGastosOperativos;
+    const deliveryConIGV = deliverySinIGV + igvDelivery;
+    
     // Total con y sin IGV
-    let totalWithIGV = precioPorKg + gastosOperativos + delivery;
+    let totalWithIGV = precioPorKg + gastosOperativosConIGV + deliveryConIGV;
     let totalWithoutIGV = precioPorKg + gastosOperativosSinIGV + deliverySinIGV;
     
     // Ajustar el total según la opción de IGV para la visualización de liquidación
+    const gastosOperativosDisplay = considerIGV === 'Si' ? gastosOperativosConIGV : gastosOperativosSinIGV;
+    const deliveryDisplay = considerIGV === 'Si' ? deliveryConIGV : deliverySinIGV;
     const displayTotal = considerIGV === 'Si' ? totalWithIGV : totalWithoutIGV;
     
     return {
       precioPorKg: precioPorKg,
-      gastosOperativos: considerIGV === 'Si' ? gastosOperativos : gastosOperativosSinIGV,
-      delivery: considerIGV === 'Si' ? delivery : deliverySinIGV,
+      gastosOperativos: gastosOperativosDisplay,
+      delivery: deliveryDisplay,
       igvGastosOperativos: igvGastosOperativos,
       igvDelivery: igvDelivery,
+      gastosOperativosSinIGV: gastosOperativosSinIGV,
+      deliverySinIGV: deliverySinIGV,
       total: displayTotal,
       totalForTax: totalWithIGV // Total real para cálculo de impuestos (siempre con IGV para cálculos posteriores)
     };
@@ -352,6 +354,26 @@ const CourierCalculator = () => {
     return formatNumber(taxResults.totalWithTax);
   };
 
+  // Función para mostrar los valores de IGV en el mensaje informativo
+  const getIGVMessageForAlexim = () => {
+    const effectiveWeight = getEffectiveWeight();
+    let gastosOperativosIGV = 0;
+    let deliveryIGV = 0;
+    
+    if (effectiveWeight <= 50) {
+      gastosOperativosIGV = 0.90; // 5.00 * 0.18
+      deliveryIGV = 0.18; // 1.00 * 0.18
+    } else if (effectiveWeight >= 51 && effectiveWeight <= 70) {
+      gastosOperativosIGV = 3.60; // 20.00 * 0.18
+      deliveryIGV = 1.80; // 10.00 * 0.18
+    } else if (effectiveWeight >= 71) {
+      gastosOperativosIGV = 6.30; // 35.00 * 0.18
+      deliveryIGV = 2.70; // 15.00 * 0.18
+    }
+    
+    return `* Se resta el IGV de gastos operativos ($${gastosOperativosIGV.toFixed(2)}) y delivery ($${deliveryIGV.toFixed(2)}).`;
+  };
+
   return (
     <div className="max-w-2xl mx-auto p-4 bg-white rounded-lg shadow">
       {/* Header con logos */}
@@ -419,7 +441,7 @@ const CourierCalculator = () => {
               <option value="No">No</option>
             </select>
             {selectedCourier === 'Alexim' && considerIGV === 'No' && (
-              <p className="text-xs text-blue-600 mt-1">* Se resta el IGV de gastos operativos ($0.90) y delivery ($0.18).</p>
+              <p className="text-xs text-blue-600 mt-1">{getIGVMessageForAlexim()}</p>
             )}
           </div>
           
